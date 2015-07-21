@@ -1,4 +1,7 @@
-set(libprotobuf_files
+set(libprotobuf_hdrs
+    )
+
+set(libprotobuf_srcs
   ${protobuf_source_dir}/src/google/protobuf/any.cc
   ${protobuf_source_dir}/src/google/protobuf/any.pb.cc
   ${protobuf_source_dir}/src/google/protobuf/api.pb.cc
@@ -52,8 +55,26 @@ set(libprotobuf_files
   ${protobuf_source_dir}/src/google/protobuf/wrappers.pb.cc
 )
 
-add_library(libprotobuf ${libprotobuf_lite_files} ${libprotobuf_files})
-target_link_libraries(libprotobuf ${CMAKE_THREAD_LIBS_INIT} ${ZLIB_LIBRARIES})
-set_target_properties(libprotobuf PROPERTIES
-    COMPILE_DEFINITIONS LIBPROTOBUF_EXPORTS
-    OUTPUT_NAME ${LIB_PREFIX}protobuf)
+message(STATUS "additional_libs: ${additional_libs}")
+
+if(BUILD_SHARED_LIBS)
+    list(APPEND exportTargets libprotobuf)
+    add_library(libprotobuf SHARED ${libprotobuf_lite_files} ${libprotobuf_srcs} ${libprotobuf_hdrs})
+    target_link_libraries(libprotobuf ${CMAKE_THREAD_LIBS_INIT} ${additional_libs})
+    set_target_properties(libprotobuf PROPERTIES
+        COMPILE_DEFINITIONS "LIBPROTOBUF_EXPORTS;PROTOBUF_USE_DLLS"
+        INTERFACE_COMPILE_DEFINITIONS "PROTOBUF_USE_DLLS"
+        IMPORT_PREFIX ""
+        IMPORT_SUFFIX _imp${CMAKE_IMPORT_LIBRARY_SUFFIX}
+        INTERFACE_INCLUDE_DIRECTORIES "$<BUILD_INTERFACE:${protobuf_source_dir}/src>;$<INSTALL_INTERFACE:include>"
+        INCLUDE_DIRECTORIES "${protobuf_source_dir}/src"
+        PREFIX "")
+endif()
+
+list(APPEND exportTargets libprotobuf_static)
+add_library(libprotobuf_static STATIC ${libprotobuf_lite_files} ${libprotobuf_srcs} ${libprotobuf_hdrs})
+target_link_libraries(libprotobuf_static ${CMAKE_THREAD_LIBS_INIT} ${additional_libs})
+set_target_properties(libprotobuf_static PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "$<BUILD_INTERFACE:${protobuf_source_dir}/src>;$<INSTALL_INTERFACE:include>"
+    INCLUDE_DIRECTORIES "${protobuf_source_dir}/src"
+    PREFIX "")

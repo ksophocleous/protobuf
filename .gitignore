@@ -104,3 +104,6 @@ conformance/conformance-test-runner
 conformance/conformance.pb.cc
 conformance/conformance.pb.h
 conformance/protoc_middleman
+
+# cmake user build paths
+/build-*/
